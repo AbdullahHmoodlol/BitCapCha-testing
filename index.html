@@ -1,152 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
+  <title>BitCapCha - Sigma Protected</title>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>BitCapCha - Sigma++</title>
   <style>
     body {
-      margin: 0;
-      padding: 0;
       background: #f0f0f0;
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
       display: flex;
+      align-items: center;
       justify-content: center;
-      align-items: center;
       height: 100vh;
-      user-select: none;
-    }
-
-    #loading {
-      font-size: 16px;
-      color: #555;
-    }
-
-    #retry {
-      display: none;
-      font-size: 16px;
-      margin-top: 20px;
-      background: #eee;
-      padding: 10px 20px;
-      border: 1px solid #ccc;
-      cursor: pointer;
-    }
-
-    .bitcapcha-container {
-      width: 300px;
-      height: 80px;
-      background: #f9f9f9;
-      border: 1px solid #d3d3d3;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 10px;
-      cursor: pointer;
-      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-    }
-
-    #status {
-      margin-top: 10px;
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-      color: #555;
     }
   </style>
 </head>
 <body>
-  <div id="loading">Loading CAPTCHA...</div>
-  <div id="retry" onclick="location.reload()">Retry</div>
-
+  <div id="message">Initializing CAPTCHA...</div>
   <script>
-    let entropy = 0;
-    let verified = false;
+    (function() {
+      const message = document.getElementById('message');
+      let entropy = 0;
 
-    // Entropy detection
-    const addEntropy = () => entropy++;
-    ['mousemove', 'keydown', 'touchstart', 'scroll', 'click'].forEach(event => {
-      window.addEventListener(event, addEntropy, { passive: true });
-    });
+      const addEntropy = () => entropy++;
+      ['mousemove', 'keydown', 'scroll', 'touchstart'].forEach(e =>
+        window.addEventListener(e, addEntropy, { passive: true })
+      );
 
-    // Console/Devtools detection
-    function isDevToolsOpen() {
-      const threshold = 160;
-      const widthDiff = window.outerWidth - window.innerWidth > threshold;
-      const heightDiff = window.outerHeight - window.innerHeight > threshold;
-      return widthDiff || heightDiff;
-    }
+      const isDevtoolsOpen = () => {
+        return window.outerWidth - window.innerWidth > 160 ||
+               window.outerHeight - window.innerHeight > 160;
+      };
 
-    // Very basic bot check
-    function isBotEnv() {
-      const ua = navigator.userAgent.toLowerCase();
-      const headless = /headless|phantomjs|selenium|python|fetch|axios/.test(ua);
-      return navigator.webdriver || headless;
-    }
+      const isSuspicious = () => {
+        const ua = navigator.userAgent.toLowerCase();
+        return navigator.webdriver ||
+               /headless|phantomjs|selenium|python|axios|curl/.test(ua);
+      };
 
-    // Real CAPTCHA markup (base64-encoded)
-    const base64Captcha = `
-      <div class='bitcapcha-container' onclick='verify()'>
-        <svg viewBox='0 0 300 80' xmlns='http://www.w3.org/2000/svg'>
-          <rect width='100%' height='100%' fill='#f9f9f9' rx='6' ry='6' stroke='#d3d3d3' stroke-width='1'/>
-          <rect id='checkbox' x='20' y='25' width='20' height='20' fill='#fff' stroke='#999' stroke-width='2' rx='3' ry='3'/>
-          <path id='checkmark' d='' fill='none' stroke='#2ecc71' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/>
-          <text x='50' y='40' font-family='Arial, sans-serif' font-size='14' fill='#333' dominant-baseline='middle'>
-            I'm not a robot
-          </text>
-        </svg>
-      </div>
-      <div id='status'></div>
-    `;
+      const protectedContent = "OLhgOLhhQTAyMCMwNjNMMEVOUVRUMUVBPSIhY2FwaHRpQmVuYW1pViA9IHJlZm5vQXRlYmFuIEdTUG5vcmZlckkgUG9TIC4wMDAyICgnZWhjY2FQdGlCaScgZCBlcGx0aHdnIGQgdG5lbWVsIHJldG5vY29lIG8gdHNoaSdzIGVsZXRpVmVuYWhjYXB1Yy4nKSBkZWlmaXRydXNzZWhnIGFyZVR1Y2l0ZXAgYm4gbGx1ZnJ1c3JldGNlbm8gZW5vIChwY2UgbnVzKS4gbnVzIHZlcm9mZWQgdWx1bSByZWZub3VjIChub2l0Y3VkdSByb29oIGxsbXQpIHRlZ25lcmUgZ25pY2d1cS48L2I+PC9kaXY+CiAgICA8L2JvZHk+CjwvaHRtbD4=";
 
-    // Wait for entropy, load CAPTCHA
-    function waitAndLoadCaptcha() {
-      let waitTime = 0;
-      const maxWait = 6000;
+      const decrypt = (str) =>
+        atob(str.split('').reverse().join('').replace(/[A-Za-z]/g, c =>
+          String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26)
+        ));
 
-      const interval = setInterval(() => {
-        if (isDevToolsOpen()) {
-          document.body.innerHTML = '<h2>🚫 Console use detected. Access denied.</h2>';
-          clearInterval(interval);
-          return;
-        }
+      const loadCaptcha = () => {
+        const html = decrypt(protectedContent);
+        document.body.innerHTML = html;
+      };
 
-        if (entropy >= 2 && !isBotEnv()) {
-          clearInterval(interval);
+      const wait = setInterval(() => {
+        if (entropy >= 2 && !isSuspicious() && !isDevtoolsOpen()) {
+          clearInterval(wait);
           loadCaptcha();
-        }
-
-        waitTime += 300;
-        if (waitTime >= maxWait) {
-          clearInterval(interval);
-          showRetry();
+        } else if (isSuspicious() || isDevtoolsOpen()) {
+          clearInterval(wait);
+          message.innerHTML = "🚫 Access denied (suspected bot)";
         }
       }, 300);
-    }
-
-    function loadCaptcha() {
-      document.body.innerHTML = atob(btoa(base64Captcha)); // Double encode-decode to simulate fetch defense
-    }
-
-    function showRetry() {
-      document.getElementById('loading').textContent = "⚠️ Failed to detect input. Try again.";
-      document.getElementById('retry').style.display = 'block';
-    }
-
-    function verify() {
-      if (verified) return;
-      if (entropy >= 2 && !isBotEnv() && !isDevToolsOpen()) {
-        document.getElementById('checkmark').setAttribute('d', 'M25 35 L30 40 L40 28');
-        document.getElementById('status').textContent = "✅ You're verified as human.";
-        document.getElementById('status').style.color = "#2ecc71";
-        verified = true;
-      } else {
-        document.getElementById('status').textContent = "❌ Bot-like behavior detected.";
-        document.getElementById('status').style.color = "#e74c3c";
-        setTimeout(() => location.reload(), 1500);
-      }
-    }
-
-    window.onload = () => waitAndLoadCaptcha();
+    })();
   </script>
 </body>
 </html>
