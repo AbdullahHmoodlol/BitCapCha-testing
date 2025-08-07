@@ -1,0 +1,69 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BitCapCha v2 - Sigma++</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+    }#bitcapcha-loader {
+  width: 100%;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  font-size: 16px;
+}
+
+  </style>
+</head>
+<body>
+  <div id="bitcapcha-loader">Loading human verification...</div>  <script>
+    function isBotEnv() {
+      const ua = navigator.userAgent.toLowerCase();
+      return (
+        /headless|phantomjs|selenium/.test(ua) ||
+        navigator.webdriver ||
+        (!navigator.maxTouchPoints && !window.TouchEvent)
+      );
+    }
+
+    let entropy = 0;
+    function registerEntropy() {
+      entropy++;
+    }
+    window.addEventListener('mousemove', registerEntropy);
+    window.addEventListener('keydown', registerEntropy);
+    window.addEventListener('touchstart', registerEntropy);
+    window.addEventListener('scroll', registerEntropy);
+
+    const b64captcha = `PGRpdiBpZD0iYml0Y2FwY2hhIiBjbGFzcz0iYml0Y2FwY2hhLWNvbnRhaW5lciIgb25jbGljaz0idmVyaWZ5SHVtYW4oZXZlbnQpIj4KPHN2ZyB2aWV3Qm94PSIwIDAgMzAwIDgwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiNmOWY5Zjk"gcng9IjYiIHJ5PSI2IiBzdHJva2U9IiNkM2QzZDMiIHN0cm9rZS13aWR0aD0iMSIvPgogIDxyZWN0IGlkPSJjaGVja2JveCIgeD0iMjAiIHk9IjI1IiB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzk5OSIgc3Ryb2tlLXdpZHRoPSIyIiByeD0iMyIgcnk9IjMiLz4KICA8cGF0aCBpZD0iY2hlY2ttYXJrIiBkPSIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzJlY2M3MSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICA8dGV4dCB4PSI1MCIgeT0iNDAiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzMzMyIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+SSdtIG5vdCBhIHJvYm90PC90ZXh0PgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDI0MCwgMjApIj4KICAgIDxwYXRoIGQ9Ik0xNiAwIEwzMiA4IEwyOCAyOCBMMTYgMzIgTDQgMjggTDAgOCBaIiBmaWxsPSIjZTBjMGUwIiBzdHJva2U9IiNiYmIiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPHRleHQgeD0iMTYiIHk9IjIyIiBmb250LWZhbWlseT0iQXJpYWwgQmxhY2ssIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTIiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM1NTUiPkI8L3RleHQ+CiAgPC9nPgo8L3N2Zz4KPC9kaXY+CiAgPGRpdiBpZD0ic3RhdHVzIiBzdHlsZT0ibWFyZ2luLXRvcDogMTBweDsgY29sb3I6ICM1NTU7IGZvbnQtc2l6ZTogMTRweCI+PC9kaXY+`;
+
+    function loadBitCapCha() {
+      const capchaHTML = atob(b64captcha);
+      document.getElementById('bitcapcha-loader').style.display = 'none';
+      document.body.insertAdjacentHTML('beforeend', capchaHTML);
+    }
+
+    setTimeout(() => {
+      if (!isBotEnv() && entropy > 2) {
+        loadBitCapCha();
+      } else {
+        document.getElementById('bitcapcha-loader').textContent =
+          '⚠️ Suspicious environment. Human verification failed.';
+        document.getElementById('bitcapcha-loader').style.color = '#e74c3c';
+      }
+    }, 2000);
+
+    function verifyHuman(event) {
+      const check = document.getElementById('checkmark');
+      if (check.getAttribute('d')) return;
+      check.setAttribute('d', 'M25 35 L30 40 L40 28');
+      document.getElementById('status').textContent = "✅ Verified: You're human.";
+      document.getElementById('status').style.color = '#2ecc71';
+    }
+  </script></body>
+</html>
