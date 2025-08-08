@@ -1,55 +1,171 @@
-import requests
-from bs4 import BeautifulSoup
-
-# URL of your CAPTCHA page (for local testing, use a local server like Flask or http.server)
-url = "https://example.com/captcha.html"  # Replace with actual URL
-
-headers = {
-    "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BitCapCha - Sigma++</title>
+  <style>
+    * {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-family: Arial, sans-serif;
 }
 
-def scrape_captcha(url):
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        html = response.text
+.bitcapcha-container {
+  width: 90%;
+  max-width: 300px;
+  height: 80px;
+  background: #f9f9f9;
+  border: 1px solid #d3d3d3;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+  opacity: 0.4;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
 
-        print("Raw HTML Preview (first 500 characters):\n")
-        print(html[:500])  # Show the first 500 characters (what a bot might see)
+.bitcapcha-container.active {
+  opacity: 1;
+  pointer-events: auto;
+}
 
-        soup = BeautifulSoup(html, "html.parser")
+.bitcapcha-container svg {
+  width: 100%;
+  height: 100%;
+}
 
-        print("\nImportant Elements Found:\n")
+.honeypot,
+.invisible-field,
+.decoy-button {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+  opacity: 0;
+}
 
-        # Look for the main CAPTCHA container
-        container = soup.find(class_="bitcapcha-container")
-        if container:
-            print("Found .bitcapcha-container")
+#status {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #555;
+  text-align: center;
+}
 
-            # Check for SVG elements
-            svg = container.find("svg")
-            if svg:
-                print(" - Found embedded SVG for checkbox and label")
+  </style>
+</head>
+<body>
+  <input type="text" class="honeypot" name="email" autocomplete="off" />
+  <input type="text" class="invisible-field" name="username" autocomplete="off" />
+  <div class="decoy-button" onclick="botTrap()">Fake Click</div>  <div class="bitcapcha-container" id="bitcapcha" onclick="verifyHuman(event)">
+    <svg viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100%" height="100%" fill="#f9f9f9" rx="6" ry="6" stroke="#d3d3d3" stroke-width="1" />
+      <rect id="checkbox" x="20" y="25" width="20" height="20" fill="#fff" stroke="#999" stroke-width="2" rx="3" ry="3" />
+      <path id="checkmark" d="" fill="none" stroke="#2ecc71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      <text x="50" y="40" font-family="Arial, sans-serif" font-size="14" fill="#333" dominant-baseline="middle">I'm not a robot</text>
+      <g transform="translate(240, 20)">
+        <path d="M16 0 L32 8 L28 28 L16 32 L4 28 L0 8 Z" fill="#e0e0e0" stroke="#bbb" stroke-width="1" />
+        <text x="16" y="22" font-family="Arial Black, sans-serif" font-size="12" text-anchor="middle" fill="#555">B</text>
+      </g>
+    </svg>
+  </div>  <div id="status"></div>  <script>
+    (() => {
+      const _0xobf = (str) => [...str].map(ch => String.fromCharCode(ch.charCodeAt(0) + 1)).join('');
+      const _0xor = (s, k) => s.split('').map((c, i) => String.fromCharCode(c.charCodeAt(0) ^ k.charCodeAt(i % k.length))).join('');
 
-            # Check for status message area
-            status = soup.find(id="status")
-            if status:
-                print(" - Found status display element")
-        else:
-            print(" - No .bitcapcha-container found")
+      let v = false, r = false, mm = 0, tm = 0, ks = 0, scr = 0, st = 0, ent = [];
 
-        # Attempt to extract scripts (what a bot might try to analyze)
-        scripts = soup.find_all("script")
-        print(f"\nFound {len(scripts)} <script> tag(s)")
-        for i, script in enumerate(scripts):
-            if script.string:
-                snippet = script.string.strip()[:200]
-                print(f"\nScript {i + 1} Preview:\n{snippet}...\n")
-            else:
-                print(f"\nScript {i + 1} is external or empty")
+      function botTrap() {
+        alert('⚠️ Bot trap activated. Session terminated.');
+        throw new Error("Bot detected.");
+      }
 
-    except requests.exceptions.RequestException as e:
-        print(f"Request failed: {e}")
+      function isMobile() {
+        return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+      }
 
-# Run it
-scrape_captcha(url)
+      function isSuspiciousEnv() {
+        const ua = navigator.userAgent.toLowerCase();
+        const suspiciousUA = /headless|phantomjs|selenium/.test(ua);
+        const webDriver = navigator.webdriver;
+        const noPlugins = navigator.plugins.length === 0;
+        const noLanguages = !navigator.languages || navigator.languages.length === 0;
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.fillText('hello', 0, 0);
+        const fingerprint = canvas.toDataURL();
+
+        const audioSupported = typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined';
+
+        return (suspiciousUA || webDriver || noLanguages || !ctx || !audioSupported || fingerprint.length < 1000);
+      }
+
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          document.getElementById('bitcapcha').classList.add('active');
+          st = performance.now();
+
+          document.addEventListener('mousemove', e => {
+            mm++;
+            ent.push({ x: e.clientX, y: e.clientY, t: Date.now() });
+          });
+
+          document.addEventListener('touchmove', e => {
+            tm++;
+            if (e.touches.length > 0) {
+              ent.push({ x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() });
+            }
+          });
+
+          document.addEventListener('keydown', e => {
+            ks++;
+            ent.push({ key: e.key, t: Date.now() });
+          });
+
+          document.addEventListener('scroll', () => scr++);
+          r = true;
+        }, 1000 + Math.floor(Math.random() * 1000));
+      });
+
+      window.verifyHuman = (event) => {
+        if (!r || v) return;
+
+        const ct = performance.now() - st;
+        const hp = document.querySelector('.honeypot');
+        const iv = document.querySelector('.invisible-field');
+        const status = document.getElementById('status');
+        const uent = new Set(ent.map(e => JSON.stringify(e))).size;
+
+        let ih = false;
+        const cleanEnv = !isSuspiciousEnv() && hp.value === '' && iv.value === '';
+
+        if (isMobile()) {
+          ih = cleanEnv && (tm >= 1 || ct > 800 || uent >= 3);
+        } else {
+          ih = cleanEnv && ((mm >= 3 && ct > 500) || (ks > 0 && ct > 400) || (scr > 0 && ct > 600) || uent >= 8);
+        }
+
+        if (ih) {
+          document.getElementById('checkmark').setAttribute('d', 'M25 35 L30 40 L40 28');
+          v = true;
+          status.textContent = "✅ Verified: You're human.";
+          status.style.color = "#2ecc71";
+          window.parent.postMessage({ bitcapcha: true }, '*');
+        } else {
+          status.textContent = "⚠️ Bot-like behavior or insufficient interaction. Please try again.";
+          status.style.color = "#e67e22";
+        }
+      }
+    })();
+  </script></body>
+        </html>
